@@ -11,9 +11,12 @@
 
 
 TO DO: 
-Prompt user on content he/she wants to see/save?
-Set-up Automatic emailing of results
+Build interactive prompt to find content user wants to see/save.
+Set-up Automatic emailing of results (cron)
 Fix unicode encoding on SMS received
+Change data pulled by NoaaParser.weather_get so it is more logical. (in progress...)
+Test against other ndbc.noaa.gov pages
+Test location-search against various values and build more logical location-selector
 
 Record-Keeping:
 Output to csv desired results from selected stations
