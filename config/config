@@ -8,6 +8,6 @@ SET_REGION = "http://ndbc.noaa.gov/mobile/region.php?reg=southwest_usa"
 SET_LOCATION = "La Jolla"
 
 # see en.wikipedia.org/wiki/List)of_SMS_gateways
-# for proper formatting of recipeient number
+# for proper formatting of recipient number
 
 RECIPIENT = "phone_number@SMS-Provider-Domain"
