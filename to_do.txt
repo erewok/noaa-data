@@ -1,0 +1,22 @@
+# ----------------------------------- #
+# STEPS
+# 1. Build NoaaParser object "weather"
+# 2. top_level = Object.parse_results(source)
+# 3. Select Region
+# 4. second_level = weather.parse_results(selected_region)
+# 5. Find search key
+# 6. my_loc = weather.get_locations(search-key, second_level)
+# 7. my_weather = weather.weather_get(my_loc)
+# ------------------------------------- #
+
+
+TO DO: 
+Prompt user on content he/she wants to see/save?
+Set-up Automatic emailing of results
+Fix unicode encoding on SMS received
+
+Record-Keeping:
+Output to csv desired results from selected stations
+
+#----------------------------------------------------------------#
+

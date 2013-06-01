@@ -1,0 +1,13 @@
+# I set up a new Gmail account just to run this script...
+
+EMAIL_USERNAME = "username@gmail.com"
+EMAIL_PASSWORD = "password"
+
+# set your location: see ndbc.noaa.gov/mobile/ for list
+SET_REGION = http://ndbc.noaa.gov/mobile/region.php?reg=southwest_usa
+SET_LOCATION = "La Jolla"
+
+# see en.wikipedia.org/wiki/List)of_SMS_gateways
+# for proper formatting of recipeient number
+
+RECIPIENT = "phone_number@SMS-Provider-Domain"
