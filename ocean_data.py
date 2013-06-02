@@ -12,8 +12,8 @@ def read_config():
             if '=' in line:
                 line = line.replace('"', '')
                 data[line.rsplit(' = ')[0].strip()] = line.rsplit(' = ')[1].strip() 
-# I put spaces around the "=" because the url will have an "=" in it,
-# but the rest of the config data will have spaces around "=".
+                # I put spaces around the "=" because the url will have an "=" in it,
+                # but the rest of the config data will have spaces around "=".
     return data
 
 def ocean_data(source, my_loc):

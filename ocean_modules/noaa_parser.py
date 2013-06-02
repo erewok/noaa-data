@@ -40,7 +40,7 @@ class NoaaParser(object):
         weathersoup = BeautifulSoup(f)
         for node in weathersoup.find_all(['p', 'h1', 'h2']):
           self.datalist.extend(node.find_all(text=True))
-# get rid of items containing the following:
+    # get rid of items containing the following:
     self.excludes = ["Feedback:", "Main", "webmaster.ndbc@noaa.gov"]
     self.results = [x.strip('\n') for x in self.datalist if not any(y in self.excludes for y in x.split())]  
     return [item for item in self.results if item]
