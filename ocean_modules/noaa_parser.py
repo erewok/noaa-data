@@ -32,15 +32,46 @@ class NoaaParser(object):
       return "Search key not found"
 
   def weather_get(self, weather_sources):
-    '''weather__get takes a list of urls and builds a dataset from those urls. This is the final information retrieval method.'''
+    '''weather__get takes a list of urls and builds a dataset from those urls. This is the information retrieval method that simply dumps all data.'''
     self.weather_sources = weather_sources
-    self.datalist = []
+    datalist = []
     for url in self.weather_sources:
       with urlopen(url) as f:
         weathersoup = BeautifulSoup(f)
         for node in weathersoup.find_all(['p', 'h1', 'h2']):
-          self.datalist.extend(node.find_all(text=True))
+          datalist.extend(node.find_all(text=True))
     # get rid of items containing the following:
-    self.excludes = ["Feedback:", "Main", "webmaster.ndbc@noaa.gov"]
-    self.results = [x.strip('\n') for x in self.datalist if not any(y in self.excludes for y in x.split())]  
-    return [item for item in self.results if item]
+    excludes = ["Feedback:", "Main", "webmaster.ndbc@noaa.gov"]
+    results = [x.strip('\n') for x in datalist if not any(y in excludes for y in x.split())]  
+    return [item for item in results if item]
+
+  def weather_info_dict(self, weather_sources):
+    '''weather__info_dict takes a list of urls and builds a dictionary from those urls. This method drops some data that may be duplicated (for instance, where "Weather Summary" appears twice), but I prefer it because it produces cleaner, better organized information and still has the most important stuff. Use self.data to retrieve /all/ information.'''
+    self.weather_sources = weather_sources
+    self.data = {}
+    for url in self.weather_sources:
+      with urlopen(url) as f:
+        weathersoup = BeautifulSoup(f)
+        for node in weathersoup.find_all('h2'):
+          if node.string not in self.data.keys():
+            self.data[node.string] = node.next_sibling.next_sibling(text=True)
+            # '.next_sibling.next_sibling' trick came directly from bs4 docs
+
+    # The following may be an abuse of the dictionary comprehension, 
+    # but it was the easiest way to create a nested dictionary (for writing to csv)
+    # It's not /that/ complex, though, once you realize it's mostly 
+    # creating a new nested dictionary out of splitting up stuff on 
+    # either side of the colon. Thus, {"Weather : ["Air Temp: 66.0", etc.] becomes:
+    # {"Weather : {"Air Temp" : "66.0"}} etc.
+
+    data_final = {key : {val.rsplit(":")[0].strip() : val.rsplit(":")[1].strip() for val in value if val.strip() and "GMT" not in val and "PDT" not in val} for key, value in data.items()} # 'if val.strip()' checks to make sure it's not empty
+
+    # Last run through makes sure there's a 'Time' key in the dict. It was
+    # hard to get with that colon in it before! 
+    if "Time" not in self.data_final.keys():
+      for list_of_info in self.data.values():
+        for _item in list_of_info:
+          if "PDT" in _item:
+            data_final["Time"] = _item.strip()
+
+    return data_final
