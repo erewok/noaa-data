@@ -10,7 +10,7 @@ To get this program working:
 
 2) Enter username/password of the email address you want to use (I created a throwaway specifically to do this)
 
-3) Run through the data buouys and figure out the region you want (southwest_usa is saved in there)
+3) Run through the data buoys and figure out the region you want (southwest_usa is saved in there)
 
 4) Look at the region in a browser and figure out the location you want. I selected "La Jolla" which appears in two of the bouy names. It searches through the location names for your search key and it is case dependent so "La Jolla" matches but "la jolla" does not.
 
