@@ -32,4 +32,4 @@ region = http://ndbc.noaa.gov/mobile/region.php?reg=southwest_usa
 location = La Jolla
 
 [data requested]
-all = no
+send_all = no

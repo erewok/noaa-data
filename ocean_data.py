@@ -8,10 +8,8 @@ import os
 def read_config():
     parser = ConfigParser(interpolation=ExtendedInterpolation())
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    script_dir = os.path.dirname(script_dir, 'config', 'config')
-    # Uncomment the above, comment below when not in testing.
-    # file = os.path.join(os.getcwd(), 'config', 'config')
-    parser.read(file)
+    conf_file = os.path.join(script_dir, 'config', 'config')
+    parser.read(conf_file)
     return parser
 
 def ocean_data_all(source, my_loc):
@@ -52,7 +50,7 @@ if __name__=='__main__':
     region = configs['noaa.gov settings']['region']
     location = configs['noaa.gov settings']['location']
     time_zone = configs['location settings']['set_time_zone']
-    all_dat = configs['data requested'].getboolean('all')
+    all_dat = configs['data requested'].getboolean('send_all')
     if all_dat:
       message = ocean_data_all(region, location) # returns a list
     else:
