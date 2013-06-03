@@ -38,24 +38,28 @@ class NoaaParser(object):
     for url in self.weather_sources:
       with urlopen(url) as f:
         weathersoup = BeautifulSoup(f)
-        for node in weathersoup.find_all(['p', 'h1', 'h2']):
+        for node in weathersoup.find_all(['p', 'h2']):
           datalist.extend(node.find_all(text=True))
     # get rid of items containing the following:
     excludes = ["Feedback:", "Main", "webmaster.ndbc@noaa.gov"]
     results = [x.strip('\n') for x in datalist if not any(y in excludes for y in x.split())]  
     return [item for item in results if item]
 
-  def weather_info_dict(self, weather_sources):
-    '''weather__info_dict takes a list of urls and builds a dictionary from those urls. This method drops some data that may be duplicated (for instance, where "Weather Summary" appears twice), but I prefer it because it produces cleaner, better organized information and still has the most important stuff. Use self.data to retrieve /all/ information.'''
+  def weather_info_dict(self, weather_sources, time_zone):
+    '''weather__info_dict takes a list of urls and builds a dictionary from those urls. This method drops some data that may be duplicated (for instance, where "Weather Summary" appears twice), but I prefer it because it produces cleaner, better organized information and still has the most important stuff.'''
     self.weather_sources = weather_sources
-    self.data = {}
+    self.time_zone = time_zone
+    weather_dict = {}
     for url in self.weather_sources:
       with urlopen(url) as f:
         weathersoup = BeautifulSoup(f)
         for node in weathersoup.find_all('h2'):
-          if node.string not in self.data.keys():
-            self.data[node.string] = node.next_sibling.next_sibling(text=True)
+          if node.string not in weather_dict.keys():
+            if node.next_sibling == '\n':
+              weather_dict[node.string] = node.next_sibling.next_sibling(text=True)
             # '.next_sibling.next_sibling' trick came directly from bs4 docs
+            else:
+              weather_dict[node.string] = node.next_sibling(text=True)
 
     # The following may be an abuse of the dictionary comprehension, 
     # but it was the easiest way to create a nested dictionary (for writing to csv)
@@ -64,14 +68,14 @@ class NoaaParser(object):
     # either side of the colon. Thus, {"Weather : ["Air Temp: 66.0", etc.] becomes:
     # {"Weather : {"Air Temp" : "66.0"}} etc.
 
-    data_final = {key : {val.rsplit(":")[0].strip() : val.rsplit(":")[1].strip() for val in value if val.strip() and "GMT" not in val and "PDT" not in val} for key, value in data.items()} # 'if val.strip()' checks to make sure it's not empty
+    data_final = {key : {val.rsplit(":")[0].strip() : val.rsplit(":")[1].strip() for val in value if val.strip() and "GMT" not in val and self.time_zone not in val} for key, value in weather_dict.items()} # 'if val.strip()' checks to make sure it's not empty once whitespace is gone.
 
     # Last run through makes sure there's a 'Time' key in the dict. It was
     # hard to get with that colon in it before! 
-    if "Time" not in self.data_final.keys():
-      for list_of_info in self.data.values():
+    if "Time" not in data_final.keys():
+      for list_of_info in weather_dict.values():
         for _item in list_of_info:
-          if "PDT" in _item:
+          if self.time_zone in _item:
             data_final["Time"] = _item.strip()
 
     return data_final

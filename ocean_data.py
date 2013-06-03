@@ -2,32 +2,62 @@
 
 from ocean_modules.noaa_parser import NoaaParser
 from ocean_modules.send_text import _tsend as send_text
+from configparser import ConfigParser, ExtendedInterpolation
 import os
 
 def read_config():
-    data = {} 
+    parser = ConfigParser(interpolation=ExtendedInterpolation())
+    # script_dir = os.path.dirname(os.path.realpath(__file__))
+    # script_dir = os.path.dirname(script_dir, 'config', 'config')
+    # Ucomment the above, comment below when not in testing.
     file = os.path.join(os.getcwd(), 'config', 'config')
-    with open(file) as f:
-        for line in f:
-            if '=' in line:
-                line = line.replace('"', '')
-                data[line.rsplit(' = ')[0].strip()] = line.rsplit(' = ')[1].strip() 
-                # I put spaces around the "=" because the url will have an "=" in it,
-                # but the rest of the config data will have spaces around "=".
-    return data
+    parser.read(file)
+    return parser
 
-def ocean_data(source, my_loc):
+def ocean_data_all(source, my_loc):
     WeatherInfo = NoaaParser()
     all_locations = WeatherInfo.parse_results(source)
     my_sources = WeatherInfo.get_locations(my_loc, all_locations)
     return WeatherInfo.weather_get(my_sources)
 
+def ocean_data_clean(source, my_loc, time_zone):
+    WeatherInfo = NoaaParser()
+    all_locations = WeatherInfo.parse_results(source)
+    my_sources = WeatherInfo.get_locations(my_loc, all_locations)
+    return WeatherInfo.weather_info_dict(my_sources, time_zone)
+
+def make_message(input_data):
+    '''Returns a string from input_data after testing whether input is list
+    or dict. Dict will actually be a nested dict (see noaa_parser.py)'''
+    messagestring = ''
+    if isinstance(input_data, list):
+        messagestring = '\n'.join(input_data)
+    elif isinstance(input_data, dict):
+        for key, val in input_data.items():
+            messagestring += key + '\n'
+            if isinstance(val, dict):
+                for newkey, newval in val.items():
+                    messagestring += newkey + ' ' + newval + '\n'
+            else:
+                messagestring += val + '\n'
+
+    return messagestring
+        
+
 if __name__=='__main__':
     configs = read_config()
-    username = configs['EMAIL_USERNAME']    
-    password = configs['EMAIL_PASSWORD']
-    recipient = configs['RECIPIENT']
-    region = configs['SET_REGION']
-    location = configs['SET_LOCATION']
-    message = '\n'.join(ocean_data(region, location))
-    send_text(username, password, recipient, message)
+    username = configs['email']['username']    
+    password = configs['email']['password']
+    recipient = configs['cell settings']['recipient']
+    region = configs['noaa.gov settings']['region']
+    location = configs['noaa.gov settings']['location']
+    time_zone = configs['location settings']['set_time_zone']
+    all_dat = configs['data requested'].getboolean('all')
+    if all_dat:
+      message = ocean_data_all(region, location) # returns a list
+    else:
+      message = ocean_data_clean(region, location, time_zone) # returns a dict
+
+    weather_msg = location + '\n' + make_message(message)
+
+    send_text(username, password, recipient, weather_msg)

@@ -1,13 +1,35 @@
-# I set up a new Gmail account just to run this script...
+[DEFAULT]
+# This is the config file, to be parsed by ocean_data.py.
+# This file can be edited, but read the comments for suggestions
 
-EMAIL_USERNAME = "username@gmail.com"
-EMAIL_PASSWORD = "password"
+[email]
+# Fill in email authentication details
+username = username@gmail.com
+password = password
 
-# set your location: see ndbc.noaa.gov/mobile/ for list
-SET_REGION = "http://ndbc.noaa.gov/mobile/region.php?reg=southwest_usa"
-SET_LOCATION = "La Jolla"
+[location settings]
 
-# see en.wikipedia.org/wiki/List)of_SMS_gateways
-# for proper formatting of recipient number
+default_time = GMT
+# set the time-zone for the buoy data you want to check
+# if in doubt, check the ndbc.noaa.gov/mobile/station.php?station=STATION 
+# page for time-zone. 
+set_time_zone = PDT
+country = usa
 
-RECIPIENT = "phone_number@SMS-Provider-Domain"
+[cell settings]
+# no dashes: country code okay
+# see en.wikipedia.org/wiki/List_of_SMS_gateways
+# for domains and for proper formatting of recipient number
+
+cell_number = XXXXXXXXXXX
+cell_provider = provider name
+SMS_domain = SMS_domain
+recipient = ${cell_number}@${SMS_domain}
+
+[noaa.gov settings]
+# see ndbc.noaa.gov/mobile/ for list of regions and locations
+region = http://ndbc.noaa.gov/mobile/region.php?reg=southwest_usa
+location = La Jolla
+
+[data requested]
+all = no
