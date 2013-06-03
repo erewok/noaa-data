@@ -7,10 +7,10 @@ import os
 
 def read_config():
     parser = ConfigParser(interpolation=ExtendedInterpolation())
-    # script_dir = os.path.dirname(os.path.realpath(__file__))
-    # script_dir = os.path.dirname(script_dir, 'config', 'config')
-    # Ucomment the above, comment below when not in testing.
-    file = os.path.join(os.getcwd(), 'config', 'config')
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    script_dir = os.path.dirname(script_dir, 'config', 'config')
+    # Uncomment the above, comment below when not in testing.
+    # file = os.path.join(os.getcwd(), 'config', 'config')
     parser.read(file)
     return parser
 
