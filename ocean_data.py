@@ -1,9 +1,10 @@
 #!/usr/bin/python3 -tt
 
-from ocean_modules.noaa_parser import NoaaParser
-from ocean_modules.send_text import _tsend as send_text
 from configparser import ConfigParser, ExtendedInterpolation
 import os
+
+from ocean_modules.noaa_parser import NoaaParser
+from ocean_modules.send_text import _tsend as send_text
 
 def read_config():
     parser = ConfigParser(interpolation=ExtendedInterpolation())
@@ -48,18 +49,21 @@ def make_message(input_data):
 
 if __name__=='__main__':
     configs = read_config()
+    # Recipient and email configs
     username = configs['email']['username']    
     password = configs['email']['password']
     recipient = configs['cell settings']['recipient']
+    
+    # Location settings
     region = configs['noaa.gov settings']['region']
     location = configs['noaa.gov settings']['location']
     time_zone = configs['location settings']['set_time_zone']
-    all_dat = configs['data requested'].getboolean('send_all')
+    all_dat = configs['forecast settings'].getboolean('send_all')
     if all_dat:
       message = ocean_data_all(region, location) # returns a list
     else:
       message = ocean_data_clean(region, location, time_zone) # returns a dict
 
-    weather_msg = location + '\n' + make_message(message)
+    weather_msg = location + '\n' + make_message(message) # has problems with unicode
 
 #    send_text(username, password, recipient, weather_msg)

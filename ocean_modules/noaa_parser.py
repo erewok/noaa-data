@@ -6,7 +6,10 @@ from urllib.parse import urljoin
 
 
 class NoaaParser(object):
-  '''This is an attempt to return useful data from the Noaa mobile marine weather pages. To use this, you have to instatiate a NoaaParser object and then run .get_locations(search_key, source).'''
+  '''This is an attempt to return useful data from the Noaa mobile marine weather pages. To use this, you have to instatiate a NoaaParser object and then run .get_locations(search_key, source), where "source" is the page of urls listing buoys in the region you want and "search_key" is some location marker that shows up in the link or links that you want.
+  example usage:
+  weather = NoaaParser()
+  weather.get_locations("La Jolla", southwest_region_buoy_page)'''
   def __init__(self):
     self.weather_sources = []
     self.latitude = ''
@@ -43,7 +46,7 @@ class NoaaParser(object):
       raise Exception("The location you entered was not found: try a different search key.")
 
   def weather_get_all(self):
-    '''weather__get takes a list of urls and builds a dataset from those urls. This is the information retrieval method that simply dumps all data.
+    '''weather__get takes a list of urls and builds a dataset from those urls. This is the information retrieval method that simply dumps all data. You have to run get_locations(search_key, region_url) before this does anything.
     Usage: weather_get_all()'''
     datalist = []
     for url in self.weather_sources:
@@ -66,8 +69,8 @@ class NoaaParser(object):
 
 
   def weather_info_dict(self, time_zone):
-    '''weather__info_dict takes a list of urls and builds a dictionary from those urls. This method drops some data that may be duplicated (for instance, where "Weather Summary" appears twice), but I prefer it because it produces cleaner, better organized information and still has the most important stuff.
-    usage: weather_info_dict(list-of-weather-urls, time-zone-for-those-results)
+    '''weather__info_dict takes a time-zone and builds a dictionary from already-generated buoy ursl. This method drops some data that may be duplicated (for instance, where "Weather Summary" appears twice), but I prefer it because it produces cleaner, better organized information and still has the most important stuff. You have to run get_locations(search_key, region_url) before this does anything.
+    usage: weather_info_dict(time-zone-for-desired-results)
     Returns: nested dictionary that looks like "{'Weather Summary' {'time': '8:05'}}
     '''
     self.time_zone = time_zone
@@ -115,9 +118,9 @@ class NoaaParser(object):
           weathersoup = BeautifulSoup(f)
           self._set_coords(weathersoup)
 
-    forecast_page = "http://forecast.weather.gov/MapClick.php?lat={}&lon=-{}&unit=0&lg=english&FcstType=digital".format(self.latitude, self.longitude)
-    ##IMPORTANT: Long is set to negative on the west coast of the USA, check full forecast url for details elsewhere and to see if your lat or long are negative inside the url. 
-    with urlopen(forecast_page) as f:
+    self.forecast_page = "http://forecast.weather.gov/MapClick.php?lat={}&lon=-{}&unit=0&lg=english&FcstType=digital".format(self.latitude, self.longitude)
+    ##IMPORTANT: Long is set to negative on the west coast of the USA, check full forecast url for details elsewhere and to see if your lat or long are negative inside the url. Adjust forecast_page according if so.
+    with urlopen(self.forecast_page) as f:
       forecastsoup = BeautifulSoup(f)
       print(forecastsoup.prettify())
 

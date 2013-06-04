@@ -31,5 +31,17 @@ recipient = ${cell_number}@${SMS_domain}
 region = http://ndbc.noaa.gov/mobile/region.php?reg=southwest_usa
 location = La Jolla
 
-[data requested]
-send_all = no
+
+
+
+[forecast settings]
+# change name of below to be more logical with
+# something like "send_all_buoy data
+
+send_all = no 
+
+send_marine_forecast = no
+send_weather_forecast = no
+
+# max hours_ahead_to_forecast = 23
+hours_ahead_to_forecast = 6
