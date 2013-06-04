@@ -1,3 +1,11 @@
+pull:
+Lat + Lon from: H1 tags
+Use that to get tabular forecase data
+set class.attribute: lat and lon (weather.lat), (weather.lon)
+forecast.weather.gov/MapClick.php?lat=LAT&_NEG_lon&unit=0&lg=english&FcstType=digital
+##IMPORTANT: Long is set to negative on west coast, check full url for details elsewhere
+
+
 # ----------------------------------- #
 # STEPS used by program to generate data
 # 1. Build NoaaParser object "Weather"

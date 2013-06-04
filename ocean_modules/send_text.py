@@ -16,3 +16,4 @@ def _tsend(username, password, recipient, msg):
   server.login(username, password)
   server.sendmail(username, recipient, email_text)
   server.quit()
+  

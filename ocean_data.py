@@ -13,16 +13,21 @@ def read_config():
     return parser
 
 def ocean_data_all(source, my_loc):
+    '''This function retrieves all available data for "my_loc".'''
     WeatherInfo = NoaaParser()
-    all_locations = WeatherInfo.parse_results(source)
-    my_sources = WeatherInfo.get_locations(my_loc, all_locations)
-    return WeatherInfo.weather_get(my_sources)
+    my_sources = WeatherInfo.get_locations(my_loc, source)
+    return WeatherInfo.weather_get_all()
 
 def ocean_data_clean(source, my_loc, time_zone):
+    '''This function returns a cleaner version, a bit stripped-down.'''
     WeatherInfo = NoaaParser()
-    all_locations = WeatherInfo.parse_results(source)
-    my_sources = WeatherInfo.get_locations(my_loc, all_locations)
-    return WeatherInfo.weather_info_dict(my_sources, time_zone)
+    my_sources = WeatherInfo.get_locations(my_loc, source)
+    return WeatherInfo.weather_info_dict(time_zone)
+
+#def marine_forecast(source, my_loc):
+#    WeatherInfo = NoaaParser()
+#    my_sources = WeatherInfo.get_locations(my_loc, source)
+#    return 
 
 def make_message(input_data):
     '''Returns a string from input_data after testing whether input is list
@@ -38,7 +43,6 @@ def make_message(input_data):
                     messagestring += newkey + ' ' + newval + '\n'
             else:
                 messagestring += val + '\n'
-
     return messagestring
         
 
@@ -58,4 +62,4 @@ if __name__=='__main__':
 
     weather_msg = location + '\n' + make_message(message)
 
-    send_text(username, password, recipient, weather_msg)
+#    send_text(username, password, recipient, weather_msg)
