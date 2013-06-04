@@ -66,4 +66,4 @@ if __name__=='__main__':
 
     weather_msg = location + '\n' + make_message(message) # has problems with unicode
 
-#    send_text(username, password, recipient, weather_msg)
+    send_text(username, password, recipient, weather_msg)
