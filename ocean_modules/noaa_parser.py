@@ -6,10 +6,19 @@ from urllib.parse import urljoin
 
 
 class NoaaParser(object):
-  '''This is an attempt to return useful data from the Noaa mobile marine weather pages. To use this, you have to instatiate a NoaaParser object and then run .get_locations(search_key, source), where "source" is the page of urls listing buoys in the region you want and "search_key" is some location marker that shows up in the link or links that you want.
+  '''This is an attempt to return useful data from the Noaa mobile marine 
+weather pages. To use this, you have to instatiate a NoaaParser object 
+and then run .get_locations(search_key, source), where "source" is the 
+page of urls listing buoys in the region you want and "search_key" is 
+some location marker that shows up in the link or links that you want. 
+weather.get_location accepts only one search key at the moment, but
+this will be changed in future iterations to retrieve multiple weather
+reports.
+
   example usage:
   weather = NoaaParser()
   weather.get_locations("La Jolla", southwest_region_buoy_page)'''
+
   def __init__(self):
     self.weather_sources = []
     self.latitude = ''
@@ -17,7 +26,9 @@ class NoaaParser(object):
     self.coords = []
 
   def parse_results(self, source):
-    '''Take ndbc.noaa.gov page and return a dict of locations along with their full urls. This works on all the nav pages for ndbc.noaa.gov/mobile/?'''
+    '''Take ndbc.noaa.gov page and return a dict of locations along with their full urls. 
+    This works on all the nav pages for ndbc.noaa.gov/mobile/?'''
+    
     self.source = source
     loc_dict = {}
     with urlopen(self.source) as f:
@@ -46,8 +57,12 @@ class NoaaParser(object):
       raise Exception("The location you entered was not found: try a different search key.")
 
   def weather_get_all(self):
-    '''weather__get takes a list of urls and builds a dataset from those urls. This is the information retrieval method that simply dumps all data. You have to run get_locations(search_key, region_url) before this does anything.
+    '''weather__get_all takes a list of urls and builds a dataset 
+from those urls. This is the information retrieval method that simply dumps 
+all data. You have to run get_locations(search_key, region_url) 
+before this does anything because self.weather_sources must be populated.
     Usage: weather_get_all()'''
+
     datalist = []
     for url in self.weather_sources:
       with urlopen(url) as f:
@@ -69,7 +84,13 @@ class NoaaParser(object):
 
 
   def weather_info_dict(self, time_zone):
-    '''weather__info_dict takes a time-zone and builds a dictionary from already-generated buoy ursl. This method drops some data that may be duplicated (for instance, where "Weather Summary" appears twice), but I prefer it because it produces cleaner, better organized information and still has the most important stuff. You have to run get_locations(search_key, region_url) before this does anything.
+    '''weather__info_dict takes a time-zone and builds a dictionary from 
+already-generated buoy urls. This method drops some data that may be duplicated
+(for instance, where "Weather Summary" appears twice), but I prefer it because
+it produces cleaner, better organized information and still has the most 
+important stuff. You have to run get_locations(search_key, region_url) 
+before this does anything because self.weather_sources must be populated.
+
     usage: weather_info_dict(time-zone-for-desired-results)
     Returns: nested dictionary that looks like "{'Weather Summary' {'time': '8:05'}}
     '''
@@ -96,7 +117,9 @@ class NoaaParser(object):
     # either side of the colon. Thus, {"Weather : ["Air Temp: 66.0", etc.] becomes:
     # {"Weather : {"Air Temp" : "66.0"}} etc.
 
-    data_final = {key : {val.rsplit(":")[0].strip() : val.rsplit(":")[1].strip() for val in value if val.strip() and "GMT" not in val and self.time_zone not in val} for key, value in weather_dict.items()} # 'if val.strip()' checks to make sure it's not empty once whitespace is gone.
+    data_final = {key : {val.rsplit(":")[0].strip() : val.rsplit(":")[1].strip() for val in value if val.strip() and "GMT" not in val and self.time_zone not in val} for key, value in weather_dict.items()} 
+    # 'if val.strip()' checks to make sure it's not empty \
+    # once whitespace is gone; the others strip off the times.
 
     # Last run through makes sure there's a 'Time' key in the dict. It was
     # hard to get with that colon in it before! 
@@ -108,10 +131,15 @@ class NoaaParser(object):
     return data_final
 
   def get_forecast(self):
-    '''Takes the latitude and longitude and uses forecast url to retrieve the forecast.'''
+    '''Takes the latitude and longitude and uses forecast url to retrieve 
+the forecast for that location. Conjecture seems to be that: marine-buoy lat
+and lon correspond to marine weather forecasts, while terrestrial lat and lon
+correspond to terrestrial weather reports. Test further.
+
+    usage: get_forecast().'''
     if not self.coords: # Class-level coordinates are needed to get forecast page
       if not self.weather_sources:
-        raise Exception("You will have to selet a weather page before getting the forecast. Try some of the other methods first.")
+        raise Exception("\n\nYou will have to selet a weather page before getting the forecast. Try this first: get_locations('search key', 'region-url')\n\n")
       else:
         url = self.weather_sources[0]
         with urlopen(url) as f:
@@ -119,8 +147,46 @@ class NoaaParser(object):
           self._set_coords(weathersoup)
 
     self.forecast_page = "http://forecast.weather.gov/MapClick.php?lat={}&lon=-{}&unit=0&lg=english&FcstType=digital".format(self.latitude, self.longitude)
-    ##IMPORTANT: Long is set to negative on the west coast of the USA, check full forecast url for details elsewhere and to see if your lat or long are negative inside the url. Adjust forecast_page according if so.
+    ##IMPORTANT: Long is set to negative on the west coast of the USA,
+    # check full forecast url for details elsewhere and to see if your 
+    #lat or long are negative inside the url. 
+    # Adjust forecast_page accordingly if so.
+
     with urlopen(self.forecast_page) as f:
       forecastsoup = BeautifulSoup(f)
-      print(forecastsoup.prettify())
+# ---------------------------------GET FIELD NAMES -----------------#
+    field_names = []
+    ### ---- Get "Hour" --- ###
+    for node in forecastsoup.find_all(attrs={'align':'left', 'class':'date'}):
+      if node.string not in field_names:
+        field_names.append(node.string)
 
+    ### ---- Get Other Fields in first column --- ###
+    for node in forecastsoup.find_all(attrs={'align':'left', 'width':'5%'}):
+      if node.string not in field_names and node.string != "Date":
+        field_names.append(node.string)
+
+    ### ---- Get all the hours listed  ---### Times have no other attributes: that's the pattern
+    first_row_times = []
+    for node in forecastsoup.find_all(attrs={'class' : 'date', 'align': None, 'width': None}):
+      if node.string not in first_row_times:
+        first_row_times.append(node.string)
+
+    # Lastly, we want 24-hours worth of data multiplied by 11 rows. 
+    # first_fields is 11 field_names plus hour, but the "hours" have
+    # already been pulled out. Thus, we need to subtract hour 
+    # from the field_names to get the remaining total cells to pull from. 
+    # This is the logic for the limit below.
+    table_width = len(first_row_times)
+    cell_data = []
+    for node in forecast_soup.find_all(attrs={'align' : 'center', 'width' : '3%'}, limit = table_width * len(first_fields) -1):
+      cell_data.append(node.string)
+    ###!!!!TRY THIS. I MAY HAVE RUINED THE NUMBER BY ONE ###
+
+    new_list = []
+    for x in range(len(first_fields)-1):
+      new_list.append(dict(zip(first_row_times, cell_data[table_width*x:table_width*(x+1)])))
+      
+
+# can also do: from collections import OrderedDict
+#  new_list.append(OrderedDict(zip(first_row_times, cell_data[table_width*x:table_width*(x+1)])))
