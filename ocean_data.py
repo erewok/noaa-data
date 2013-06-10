@@ -7,37 +7,6 @@ from configparser import ConfigParser, ExtendedInterpolation
 from ocean_modules.noaa_parser import NoaaParser
 from ocean_modules.send_text import _tsend as send_text
 
-class NoaaData(object):
-    
-    def __init__(self, location, source):
-        self.weather = NoaaParser()
-        self.source = source
-        self.location = location
-
-    def ocean_data_all(self):
-        '''This function retrieves all available data for location listed.'''
-        self.weather.get_locations(self.location, self.source)
-        return self.weather.weather_get_all()
-
-    def ocean_data_clean(self, time_zone):
-        '''This function returns a cleaner version, a bit stripped-down.'''
-        self.time_zone = time_zone
-        self.weather.get_locations(self.location, self.source)
-        return self.weather.weather_info_dict(self.time_zone)
-
-    def get_forecast(self, **hours):
-        '''This will return a forecast generator that defaults to six-hours in advance, but which can return up to 24 hours of data.'''
-        if not self.location or not self.source:
-            self.weather.get_locations(self.location, self.source)
-        else:
-            pass
-        self.hours = hours
-        if len(self.hours) == 1:
-            for k, v in self.hours.items():
-                return self.weather.prettify_forecast(hours_ahead=v)
-        else:
-            return self.weather.prettify_forecast()
-
 def make_message(input_data):
     '''Returns a string from input_data after testing whether input is list
     or dict. Dict will actually be a nested dict (see noaa_parser.py)'''
@@ -84,23 +53,28 @@ if __name__=='__main__':
     time_zone = configs['location settings']['set_time_zone']
     all_dat = configs['forecast settings'].getboolean('send_all_data')
     forecast = configs['forecast settings'].getboolean('send_marine_forecast')
-    hours_ahead = configs['forecast settings']['hours_ahead_to_forecast']
+    hours_ = int(configs['forecast settings']['hours_ahead_to_forecast'])
 
-    weather_obj = NoaaData(location, source)
+    tmpfile = 'tmp-forecast.csv'
 
-#    if all_dat:
-#      message = weather_obj.ocean_data_all() # returns a list
-#    else:
-#      message = weather_obj.ocean_data_clean(time_zone) # returns a dict
+    weather = NoaaParser()
+    weather.get_locations(location, source)
 
-#    print(message)
-    print(weather_obj.ocean_data_all())
+    if all_dat:
+      message = weather.weather_get_all() # returns a list
+    else:
+      message = weather.weather_info_dict(time_zone) # returns a dict
+
     if forecast:
-        for n in weather_obj.get_forecast(hours=hours_ahead):
-            print(n)
+        with open(tmpfile, 'w') as f:
+            for n in weather.prettify_forecast(hours_ahead=hours_):
+                field, time, data = n
+                f.write(field + '\t' + time + '\t' + data + '\n')
     else:
         pass
 
-#    weather_msg = location + '\n' + str(make_message(message) # has problems with unicode
+    weather_msg = location + '\n' + make_message(message)
 
-#    send_text(username, password, recipient, weather_msg)
+    send_text(username, password, recipient, weather_msg)
+
+# need attachment module
