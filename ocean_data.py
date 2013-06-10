@@ -69,12 +69,10 @@ if __name__=='__main__':
         with open(tmpfile, 'w') as f:
             for n in weather.prettify_forecast(hours_ahead=hours_):
                 field, time, data = n
-                f.write(field + '\t' + time + '\t' + data + '\n')
+                f.write(field + ',' + time + ',' + data + '\n')
     else:
         pass
 
     weather_msg = location + '\n' + make_message(message)
 
-    send_text(username, password, recipient, weather_msg)
-
-# need attachment module
+    send_text(username, password, recipient, weather_msg) # need attachment module
