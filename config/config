@@ -29,11 +29,11 @@ recipient = ${cell_number}@${SMS_domain}
 
 [noaa.gov settings]
 # see ndbc.noaa.gov/mobile/ for list of regions and locations
-region = http://ndbc.noaa.gov/mobile/region.php?reg=southwest_usa
+my_source = http://ndbc.noaa.gov/mobile/region.php?reg=southwest_usa
 location = set-search-key-from-region-list
 
 [forecast settings]
-send_all = no
-send_marine_forecast = no
+send_all_data = no
+send_marine_forecast = yes
 send_weather_forecast = no
 hours_ahead_to_forecast = 6

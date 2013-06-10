@@ -26,6 +26,7 @@ reports.
     self.latitude = ''
     self.longitude = ''
     self.coords = []
+    self.forecast_dict = {}
  
   def parse_results(self, source):
     '''Take ndbc.noaa.gov page and return a dict of locations along with their full urls. 
@@ -65,8 +66,7 @@ reports.
     before this does anything because self.weather_sources must be populated.
     
     Usage: weather_get_all()
-    returns: list of data from the previously selected location, and source url.
-'''
+    returns: list of data from the previously selected location, and source url.'''
 
     datalist = []
     for url in self.weather_sources:
@@ -98,8 +98,7 @@ before this does anything because self.weather_sources must be populated.
 
     usage: weather_info_dict(time-zone-for-desired-results)
     
-    Returns: nested dictionary that looks like "{'Weather Summary' {'time': '8:05'}, 'Wave Summar' : {'etc.'}}
-    '''
+    Returns: nested dictionary that looks like "{'Weather Summary' {'time': '8:05'}, 'Wave Summary' : {'etc.'}}'''
     self.time_zone = time_zone
     weather_dict = {}
     for url in self.weather_sources:
@@ -186,7 +185,6 @@ correspond to terrestrial weather reports. Test further to confirm.
       for node in forecastsoup.find_all(attrs={'align' : 'center', 'width' : '3%'}, limit = table_width * (len(field_names) -1)):
         cell_data.append(node.string)
 
-      self.forecast_dict = {}
       for x in range(len(field_names)-1):
         self.forecast_dict[field_names[x + 1].strip()] = (OrderedDict(zip(first_row_times, cell_data[table_width*x:table_width*(x+1)])))
 
@@ -205,8 +203,8 @@ correspond to terrestrial weather reports. Test further to confirm.
       self.get_forecast()
     else:
       pass
-
     self.hours_ahead = hours_ahead
+
     for key in self.forecast_dict.keys():
       for item in list(self.forecast_dict[key].keys())[:self.hours_ahead]:
         if self.forecast_dict[key][item] != None:
