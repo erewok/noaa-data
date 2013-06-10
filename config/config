@@ -1,20 +1,19 @@
+# -*- coding utf-8 -*- 
+
 [DEFAULT]
 # This is the config file, to be parsed by ocean_data.py.
+# This is an automatically generated file, set-up by ocean_modules.setup.py
 # This file can be edited, but read the comments for suggestions
 
 [email]
-# Fill in email authentication details
-username = username@gmail.com
+# I set up a new Gmail account just to run this script...
+username = username@emaildomain.com
 password = password
-# imap server for retrieving email
 server = 'imap.gmail.com'
 
 [location settings]
 
 default_time = GMT
-# set the time-zone for the buoy data you want to check
-# if in doubt, check the ndbc.noaa.gov/mobile/station.php?station=STATION 
-# page for time-zone. 
 set_time_zone = PDT
 country = usa
 
@@ -23,22 +22,18 @@ country = usa
 # see en.wikipedia.org/wiki/List_of_SMS_gateways
 # for domains and for proper formatting of recipient number
 
-cell_number = XXXXXXXXXXX
-cell_provider = provider name
-SMS_domain = SMS_domain
+cell_number = cell_number
+cell_provider = name-of-provider
+SMS_domain = SMS-domain
 recipient = ${cell_number}@${SMS_domain}
 
 [noaa.gov settings]
 # see ndbc.noaa.gov/mobile/ for list of regions and locations
 region = http://ndbc.noaa.gov/mobile/region.php?reg=southwest_usa
-location = La Jolla
+location = set-search-key-from-region-list
 
 [forecast settings]
-# change name of below to be more logical with
-
-send_all_data = no 
+send_all = no
 send_marine_forecast = no
 send_weather_forecast = no
-
-# max hours_ahead_to_forecast = 23
 hours_ahead_to_forecast = 6

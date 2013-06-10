@@ -45,12 +45,19 @@ def make_message(input_data):
             else:
                 messagestring += val + '\n'
     return messagestring
+
+# def receive_requests(username, password, server):
+    # Ideally, this will be the part that watches for changes...
+    # It will go somewhere else...
+#    new_mails = check_mail.receive_email(username, password, server)
+#    senders_requests = check_mail.email_parsing_from_SMS(new_mails)
+#    return senders_requests
         
 
 if __name__=='__main__':
     configs = read_config()
     # Recipient and email configs
-    email_server = configs['email']'server']
+    email_server = configs['email']['server']
     username = configs['email']['username']
     password = configs['email']['password']
     recipient = configs['cell settings']['recipient']
@@ -65,6 +72,6 @@ if __name__=='__main__':
     else:
       message = ocean_data_clean(region, location, time_zone) # returns a dict
 
-    weather_msg = location + '\n' + make_message(message) # has problems with unicode
+    weather_msg = location + '\n' + str(make_message(message) # has problems with unicode
 
     send_text(username, password, recipient, weather_msg)

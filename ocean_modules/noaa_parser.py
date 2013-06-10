@@ -1,5 +1,7 @@
 #!/usr/bin/env python3 -tt
 
+from collections import OrderedDict
+
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from urllib.parse import urljoin
@@ -24,7 +26,7 @@ reports.
     self.latitude = ''
     self.longitude = ''
     self.coords = []
-
+ 
   def parse_results(self, source):
     '''Take ndbc.noaa.gov page and return a dict of locations along with their full urls. 
     This works on all the nav pages for ndbc.noaa.gov/mobile/?'''
@@ -50,18 +52,21 @@ reports.
     self.source = source
     self.search_key = search_key
     result_dict = self.parse_results(self.source)
-    self.weather_sources = [val for key, val in result_dict.items() if self.search_key in key]
+    self.weather_sources = [val for key, val in result_dict.items() if self.search_key.lower() in key.lower()]
     if len(self.weather_sources) > 0:
       return self.weather_sources
     else:
-      raise Exception("The location you entered was not found: try a different search key.")
+      raise Exception("The location you entered was not found: try a different search key. \n Check the following source for valid search terms to find your location: \n{}".format(self.source))
 
   def weather_get_all(self):
     '''weather__get_all takes a list of urls and builds a dataset 
-from those urls. This is the information retrieval method that simply dumps 
-all data. You have to run get_locations(search_key, region_url) 
-before this does anything because self.weather_sources must be populated.
-    Usage: weather_get_all()'''
+    from those urls. This is the information retrieval method that simply dumps 
+    all data. You have to run get_locations(search_key, region_url) 
+    before this does anything because self.weather_sources must be populated.
+    
+    Usage: weather_get_all()
+    returns: list of data from the previously selected location, and source url.
+'''
 
     datalist = []
     for url in self.weather_sources:
@@ -92,6 +97,7 @@ important stuff. You have to run get_locations(search_key, region_url)
 before this does anything because self.weather_sources must be populated.
 
     usage: weather_info_dict(time-zone-for-desired-results)
+    
     Returns: nested dictionary that looks like "{'Weather Summary' {'time': '8:05'}, 'Wave Summar' : {'etc.'}}
     '''
     self.time_zone = time_zone
@@ -111,16 +117,12 @@ before this does anything because self.weather_sources must be populated.
             else:
               weather_dict[node.string] = node.next_sibling(text=True)
 
-    # The following may be an abuse of the dictionary comprehension, 
-    # but it was the easiest way to create a nested dictionary (for writing to csv)
-    # It creates a new nested dictionary out of splitting up stuff on 
+    # The following creates a new nested dictionary out of splitting up stuff on 
     # either side of the colon. Thus, {"Weather : ["Air Temp: 66.0", etc.] becomes:
     # {"Weather : {"Air Temp" : "66.0"}} etc.
 
     data_final = {key : {val.rsplit(":")[0].strip() : val.rsplit(":")[1].strip() for val in value if val.strip() and "GMT" not in val and self.time_zone not in val} for key, value in weather_dict.items()} 
-    # 'if val.strip()' checks to make sure it's not empty \
-    # once whitespace is gone; the others strip off the times.
-
+  
     # Last run through makes sure there's a 'Time' key in the dict. It was
     # hard to get with that colon in it before! 
     if "Time" not in data_final.keys():
@@ -134,17 +136,19 @@ before this does anything because self.weather_sources must be populated.
     '''Takes the latitude and longitude and uses forecast url to retrieve 
 the forecast for that location. Conjecture seems to be that: marine-buoy lat
 and lon correspond to marine weather forecasts, while terrestrial lat and lon
-correspond to terrestrial weather reports. Test further.
+correspond to terrestrial weather reports. Test further to confirm.
 
-    usage: get_forecast().'''
+    usage: get_forecast().
+    
+    returns: True or False. Use prettify forecast to get results or get it from the class attribute directly: self.forecast_dict. '''
     if not self.coords: # Class-level coordinates are needed to get forecast page
       if not self.weather_sources:
         raise Exception("You will have to selet a weather page before getting the forecast. Try this first: get_locations('search key', 'region-url')\n\n")
       else:
         url = self.weather_sources[0]
         with urlopen(url) as f:
-          weathersoup = BeautifulSoup(f)
-          self._set_coords(weathersoup)
+          forecastsoup = BeautifulSoup(f)
+          self._set_coords(forecastsoup)
 
     self.forecast_page = "http://forecast.weather.gov/MapClick.php?lat={}&lon=-{}&unit=0&lg=english&FcstType=digital".format(self.latitude, self.longitude)
     ##IMPORTANT: Long is set to negative on the west coast of the USA,
@@ -168,7 +172,7 @@ correspond to terrestrial weather reports. Test further.
 
     ### ---- Get all the hours listed  ---### Times have no other attributes: that's the pattern
       first_row_times = []
-      for node in self.forecastsoup.find_all(attrs={'class' : 'date', 'align': None, 'width': None}):
+      for node in forecastsoup.find_all(attrs={'class' : 'date', 'align': None, 'width': None}):
         if node.string not in first_row_times:
           first_row_times.append(node.string)
 
@@ -179,14 +183,33 @@ correspond to terrestrial weather reports. Test further.
     # This is the logic for the limit below.
       table_width = len(first_row_times)
       cell_data = []
-      for node in forecast_soup.find_all(attrs={'align' : 'center', 'width' : '3%'}, limit = table_width * len(first_fields) -1):
+      for node in forecastsoup.find_all(attrs={'align' : 'center', 'width' : '3%'}, limit = table_width * (len(field_names) -1)):
         cell_data.append(node.string)
-    ###!!!!TRY THIS. I MAY HAVE RUINED THE NUMBER BY ONE ###
 
-      new_list = []
-      for x in range(len(first_fields)-1):
-        new_list.append(dict(zip(first_row_times, cell_data[table_width*x:table_width*(x+1)])))
-      
+      self.forecast_dict = {}
+      for x in range(len(field_names)-1):
+        self.forecast_dict[field_names[x + 1].strip()] = (OrderedDict(zip(first_row_times, cell_data[table_width*x:table_width*(x+1)])))
 
-# can also do: from collections import OrderedDict
-#  new_list.append(OrderedDict(zip(first_row_times, cell_data[table_width*x:table_width*(x+1)])))
+    if self.forecast_dict:
+      return True
+    else:
+      return False
+
+  def prettify_forecast(self, hours_ahead=6):
+    '''This takes the forecast generated by get_forecast() and yields it in a pretty format. 
+
+    It's actually a generator for use in message or email creation or for web display.
+
+    self.prettify_forecast() takes an optional argument 'hours_ahead=n' where 'n' is the number of hours ahead you would like to forecast (max 24).'''
+    if not self.forecast_dict:
+      self.get_forecast()
+    else:
+      pass
+
+    self.hours_ahead = hours_ahead
+    for key in self.forecast_dict.keys():
+      for item in list(self.forecast_dict[key].keys())[:self.hours_ahead]:
+        if self.forecast_dict[key][item] != None:
+          yield key.strip(), item + "h:", self.forecast_dict[key][item]
+        else:
+          pass
