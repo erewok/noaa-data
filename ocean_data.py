@@ -50,7 +50,8 @@ def make_message(input_data):
 if __name__=='__main__':
     configs = read_config()
     # Recipient and email configs
-    username = configs['email']['username']    
+    email_server = configs['email']'server']
+    username = configs['email']['username']
     password = configs['email']['password']
     recipient = configs['cell settings']['recipient']
     
@@ -58,7 +59,7 @@ if __name__=='__main__':
     region = configs['noaa.gov settings']['region']
     location = configs['noaa.gov settings']['location']
     time_zone = configs['location settings']['set_time_zone']
-    all_dat = configs['forecast settings'].getboolean('send_all')
+    all_dat = configs['forecast settings'].getboolean('send_all_data')
     if all_dat:
       message = ocean_data_all(region, location) # returns a list
     else:
