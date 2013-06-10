@@ -6,6 +6,8 @@
 # Fill in email authentication details
 username = username@gmail.com
 password = password
+# imap server for retrieving email
+server = 'imap.gmail.com'
 
 [location settings]
 
@@ -33,9 +35,8 @@ location = La Jolla
 
 [forecast settings]
 # change name of below to be more logical with
-# something like "send_all_buoy data
 
-send_all = no 
+send_all_data = no 
 send_marine_forecast = no
 send_weather_forecast = no
 

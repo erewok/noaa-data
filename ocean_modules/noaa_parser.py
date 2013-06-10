@@ -92,7 +92,7 @@ important stuff. You have to run get_locations(search_key, region_url)
 before this does anything because self.weather_sources must be populated.
 
     usage: weather_info_dict(time-zone-for-desired-results)
-    Returns: nested dictionary that looks like "{'Weather Summary' {'time': '8:05'}}
+    Returns: nested dictionary that looks like "{'Weather Summary' {'time': '8:05'}, 'Wave Summar' : {'etc.'}}
     '''
     self.time_zone = time_zone
     weather_dict = {}
@@ -139,7 +139,7 @@ correspond to terrestrial weather reports. Test further.
     usage: get_forecast().'''
     if not self.coords: # Class-level coordinates are needed to get forecast page
       if not self.weather_sources:
-        raise Exception("\n\nYou will have to selet a weather page before getting the forecast. Try this first: get_locations('search key', 'region-url')\n\n")
+        raise Exception("You will have to selet a weather page before getting the forecast. Try this first: get_locations('search key', 'region-url')\n\n")
       else:
         url = self.weather_sources[0]
         with urlopen(url) as f:
@@ -155,37 +155,37 @@ correspond to terrestrial weather reports. Test further.
     with urlopen(self.forecast_page) as f:
       forecastsoup = BeautifulSoup(f)
 # ---------------------------------GET FIELD NAMES -----------------#
-    field_names = []
+      field_names = []
     ### ---- Get "Hour" --- ###
-    for node in forecastsoup.find_all(attrs={'align':'left', 'class':'date'}):
-      if node.string not in field_names:
-        field_names.append(node.string)
+      for node in forecastsoup.find_all(attrs={'align':'left', 'class':'date'}):
+        if node.string not in field_names:
+          field_names.append(node.string)
 
     ### ---- Get Other Fields in first column --- ###
-    for node in forecastsoup.find_all(attrs={'align':'left', 'width':'5%'}):
-      if node.string not in field_names and node.string != "Date":
-        field_names.append(node.string)
+      for node in forecastsoup.find_all(attrs={'align':'left', 'width':'5%'}):
+        if node.string not in field_names and node.string != "Date":
+          field_names.append(node.string)
 
     ### ---- Get all the hours listed  ---### Times have no other attributes: that's the pattern
-    first_row_times = []
-    for node in forecastsoup.find_all(attrs={'class' : 'date', 'align': None, 'width': None}):
-      if node.string not in first_row_times:
-        first_row_times.append(node.string)
+      first_row_times = []
+      for node in self.forecastsoup.find_all(attrs={'class' : 'date', 'align': None, 'width': None}):
+        if node.string not in first_row_times:
+          first_row_times.append(node.string)
 
     # Lastly, we want 24-hours worth of data multiplied by 11 rows. 
     # first_fields is 11 field_names plus hour, but the "hours" have
-    # already been pulled out. Thus, we need to subtract hour 
-    # from the field_names to get the remaining total cells to pull from. 
+    # already been pulled out as our first-row header. Thus, we need to subtract the "hour" row. We do this by subtracting one from the field names.
+    # to get the remaining total cells to pull from. 
     # This is the logic for the limit below.
-    table_width = len(first_row_times)
-    cell_data = []
-    for node in forecast_soup.find_all(attrs={'align' : 'center', 'width' : '3%'}, limit = table_width * len(first_fields) -1):
-      cell_data.append(node.string)
+      table_width = len(first_row_times)
+      cell_data = []
+      for node in forecast_soup.find_all(attrs={'align' : 'center', 'width' : '3%'}, limit = table_width * len(first_fields) -1):
+        cell_data.append(node.string)
     ###!!!!TRY THIS. I MAY HAVE RUINED THE NUMBER BY ONE ###
 
-    new_list = []
-    for x in range(len(first_fields)-1):
-      new_list.append(dict(zip(first_row_times, cell_data[table_width*x:table_width*(x+1)])))
+      new_list = []
+      for x in range(len(first_fields)-1):
+        new_list.append(dict(zip(first_row_times, cell_data[table_width*x:table_width*(x+1)])))
       
 
 # can also do: from collections import OrderedDict
