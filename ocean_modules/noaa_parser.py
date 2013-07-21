@@ -149,7 +149,11 @@ correspond to terrestrial weather reports. Test further to confirm.
           forecastsoup = BeautifulSoup(f)
           self._set_coords(forecastsoup)
 
-    self.forecast_page = "http://forecast.weather.gov/MapClick.php?lat={}&lon=-{}&unit=0&lg=english&FcstType=digital".format(self.latitude, self.longitude)
+
+    forecast_url = "http://forecast.weather.gov/MapClick.php?lat={self.latitude}&lon=-{self.longitude}&unit=0&lg=english&FcstType=digital"
+    self.forecast_page = forecast_url.format_map(vars())
+
+#    .format(self.latitude, self.longitude)
     ##IMPORTANT: Long is set to negative on the west coast of the USA,
     # check full forecast url for details elsewhere and to see if your 
     #lat or long are negative inside the url. 
@@ -177,8 +181,8 @@ correspond to terrestrial weather reports. Test further to confirm.
 
     # Lastly, we want 24-hours worth of data multiplied by 11 rows. 
     # first_fields is 11 field_names plus hour, but the "hours" have
-    # already been pulled out as our first-row header. Thus, we need to subtract the "hour" row. We do this by subtracting one from the field names.
-    # to get the remaining total cells to pull from. 
+    # already been pulled out as our first-row header. Thus, we need to subtract the "hour" row. 
+    # We do this by subtracting one from the field names to get the remaining total cells to pull from. 
     # This is the logic for the limit below.
       table_width = len(first_row_times)
       cell_data = []
